@@ -44,8 +44,6 @@ public class Main extends Application {
         EventSource<SomethingEvent> eventSource = EventBusContext.getInstance().getEventSource(SomethingEvent.class);
         if (eventSource != null) {
             subscribe = eventSource.subscribe(event -> {
-                //notifier.notifyInfo("Update", "ID: " + event.getValue().getId() + "\nNAME: " + event.getValue().getName());
-
                 Notifications notificationBuilder = Notifications.create()
                         .title("Update")
                         .text("ID: " + event.getValue().getId() + "\nNAME: " + event.getValue().getName())

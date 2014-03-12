@@ -241,9 +241,6 @@ public class OrmLiteController {
         Something item = somethingList.get(0);
         Integer randomInt = randomGenerator.nextInt(100);
         item.setName("Name " + randomInt.toString());
-        int updated = dao.update(item);
-        updated += 1;
-        System.out.println(updated);
 
         eventSource.push(new SomethingEvent(item));
     }
