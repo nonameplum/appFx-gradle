@@ -1,0 +1,58 @@
+import com.sun.org.apache.regexp.internal.recompile
+
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'application'
+
+apply from: 'javafx.plugin'
+
+applicationName = 'appFx'
+mainClassName = 'appFx.Main'
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: '*.jar')
+    compile group: 'org.springframework', name: 'spring-beans', version: '3.2.5.RELEASE'
+    compile group: 'org.reflections', name: 'reflections', version: '0.9.9-RC1'
+    compile group: 'org.postgresql', name: 'postgresql', version: '9.3-1100-jdbc41'
+    compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.7.2'
+    compile group: 'org.firebirdsql.jdbc', name: 'jaybird-jdk18', version: '2.2.4'
+    compile group: 'org.javafxdata', name: 'datafx-controller', version: '2.0'
+    compile group: 'org.jdbi', name: 'jdbi', version: '2.53'
+    compile group: 'org.antlr', name: 'stringtemplate', version: '3.0'
+    compile group: 'javax.persistence', name: 'persistence-api', version: '1.0'
+    compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.5'
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.5'
+    compile group: 'org.avaje.ebeanorm', name: 'avaje-ebeanorm', version: '3.2.5'
+    compile group: 'org.avaje.ebeanorm', name: 'avaje-ebeanorm-agent', version: '3.2.2'
+    compile group: 'org.controlsfx', name: 'controlsfx', version: '8.0.5'
+    compile group: 'com.j256.ormlite', name: 'ormlite-core', version: '4.48'
+    compile group: 'com.j256.ormlite', name: 'ormlite-jdbc', version: '4.48'
+    compile group: 'commons-lang', name: 'commons-lang', version: '2.6'
+    compile group: 'com.google.guava', name: 'guava', version: '15.0'
+    testCompile group: 'junit', name: 'junit', version: '4.+'
+}
+
+task buildTimestamped(type: Copy, dependsOn: 'build') {
+    rename { String fileName ->
+        fileName.replace('SNAPSHOT', "SNAPSHOT-${new Date().format('HH-mm-dd-MM-yyyy')}")
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.8'
+}
+
+javafx {
+    appID = 'appFx'
+    appName = 'appFx'
+    mainClass = 'appFx.Main'
+    mainClassName = 'appFx.Main'
+}
