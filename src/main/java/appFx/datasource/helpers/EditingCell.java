@@ -1,12 +1,14 @@
 package appFx.datasource.helpers;
 
 import javafx.application.Platform;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,16 +74,20 @@ public class EditingCell extends TableCell<Map, Object> {
         textField = new TextField(getString());
         //textField.setMinWidth(this.getWidth() - this.getGraphicTextGap() * 2);
         textField.setPrefHeight(this.getHeight() - 2);
-        textField.setOnKeyPressed(t -> {
-            if (t.getCode() == KeyCode.ENTER) {
-                commitEdit(textField.getText());
-            } else if (t.getCode() == KeyCode.ESCAPE) {
-                cancelEdit();
-            } else if (t.getCode() == KeyCode.TAB) {
-                commitEdit(textField.getText());
-                TableColumn nextColumn = getNextColumn(!t.isShiftDown());
-                if (nextColumn != null) {
-                    getTableView().edit(getTableRow().getIndex(), nextColumn);
+
+        textField.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent keyEvent) {
+                if (keyEvent.getCode() == KeyCode.ENTER) {
+                    commitEdit(textField.getText());
+                } else if (keyEvent.getCode() == KeyCode.ESCAPE) {
+                    cancelEdit();
+                } else if (keyEvent.getCode() == KeyCode.TAB) {
+                    commitEdit(textField.getText());
+                    TableColumn nextColumn = getNextColumn(!keyEvent.isShiftDown());
+                    if (nextColumn != null) {
+                        getTableView().edit(getTableRow().getIndex(), nextColumn);
+                    }
                 }
             }
         });
