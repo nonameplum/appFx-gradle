@@ -2,13 +2,11 @@ package appFx.controllers;
 
 import appFx.datasource.SqlLiteDBI;
 import appFx.datasource.TableViewDS;
-import appFx.eventbus.EventBusContext;
-import appFx.eventbus.events.SomethingEvent;
+import appFx.datasource.helpers.EditingCell;
+import appFx.eventbus.events.*;
 import appFx.models.Something;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
-import com.j256.ormlite.dao.GenericRawResults;
-import com.j256.ormlite.dao.RawRowMapper;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.jdbc.JdbcPooledConnectionSource;
 import javafx.beans.value.ChangeListener;
@@ -25,23 +23,23 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.effect.BoxBlur;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.stage.WindowEvent;
+import javafx.util.Callback;
 import org.controlsfx.control.PopOver;
 import org.datafx.controller.FXMLController;
 import org.datafx.controller.context.FXMLViewContext;
 import org.datafx.controller.context.ViewContext;
 import org.springframework.beans.PropertyAccessor;
 import org.springframework.beans.PropertyAccessorFactory;
-import reactfx.EventSource;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
 
@@ -68,14 +66,11 @@ public class OrmLiteController {
     JdbcPooledConnectionSource firebirdConnection;
 
     Random randomGenerator = new Random();
-    EventSource<SomethingEvent> eventSource = new EventSource<>();
 
     @PostConstruct
     public void init() {
-        EventBusContext.getInstance().registerEventSource(SomethingEvent.class, eventSource);
-
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setEditable(false);
+        tableView.setEditable(true);
 
         try {
             jdbcConnectionSource = new JdbcPooledConnectionSource(SqlLiteDBI.getConnectionUrl());
@@ -84,11 +79,11 @@ public class OrmLiteController {
             e.printStackTrace();
         }
 
-        try {
-            cfgPopupEdition();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            cfgPopupEdition();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
     }
 
     public void cfgPopupEdition() throws IOException {
@@ -131,7 +126,6 @@ public class OrmLiteController {
 
                 try {
                     int update = dao.update(selectedItem);
-                    eventSource.push(new SomethingEvent(selectedItem));
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
@@ -220,6 +214,21 @@ public class OrmLiteController {
         idColumn.setCellValueFactory(new PropertyValueFactory<Something, Integer>("id"));
         TableColumn nameColumn = new TableColumn("NAME");
         nameColumn.setCellValueFactory(new PropertyValueFactory<Something, String>("name"));
+        Callback<TableColumn<Map, Object>, TableCell<Something, String>> cellFactory = p -> new EditingCell();
+        nameColumn.setCellFactory(cellFactory);
+
+        nameColumn.setOnEditCommit(new EventHandler<TableColumn.CellEditEvent<Something, String>>() {
+            @Override
+            public void handle(TableColumn.CellEditEvent<Something, String> t) {
+                Something something = t.getTableView().getItems().get(t.getTablePosition().getRow());
+                something.setName(t.getNewValue());
+                try {
+                    dao.update(something);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
 
         tableView.getColumns().addAll(idColumn, nameColumn);
         tableView.setItems(FXCollections.observableArrayList(somethingList));
@@ -242,7 +251,11 @@ public class OrmLiteController {
         Integer randomInt = randomGenerator.nextInt(100);
         item.setName("Name " + randomInt.toString());
 
-        eventSource.push(new SomethingEvent(item));
+        EventBusContext.INSTANCE.eventBus.fireEvent(new SomethingModelActionEvent(item));
+
+        EventBusContext.INSTANCE.eventBus.fireEvent(new appFx.eventbus.events.SimpleActionEvent("1"));
+
+        EventBusContext.INSTANCE.eventBus.fireEvent(new appFx.controllers.SimpleActionEvent("2"));
     }
 
 }

@@ -1,26 +1,23 @@
 package appFx.datasource.mappers;
 
+import appFx.datasource.helpers.DatasourceMap;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableMap;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
-public class MapMapper implements ResultSetMapper<Map<String, SimpleObjectProperty<Object>>> {
+public class MapMapper implements ResultSetMapper<DatasourceMap> {
 
     @Override
-    public ObservableMap<String, SimpleObjectProperty<Object>> map(int index, ResultSet r, StatementContext ctx) throws SQLException {
+    public DatasourceMap map(int index, ResultSet r, StatementContext ctx) throws SQLException {
 //        Map<String, Object> obj = new LinkedHashMap();
-        ObservableMap<String, SimpleObjectProperty<Object>> obj = FXCollections.observableMap(new LinkedHashMap<String, SimpleObjectProperty<Object>>());
+        DatasourceMap datasourceMap = new DatasourceMap();
         for (int i = 1; i <= r.getMetaData().getColumnCount(); i++) {
             Object rsObj = r.getObject(i);
-            obj.put(r.getMetaData().getColumnLabel(i), new SimpleObjectProperty<Object>(rsObj));
+            datasourceMap.put(r.getMetaData().getColumnLabel(i), new SimpleObjectProperty<>(rsObj));
         }
-        return obj;
+        return datasourceMap;
     }
 }

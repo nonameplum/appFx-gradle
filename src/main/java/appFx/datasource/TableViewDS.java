@@ -1,18 +1,16 @@
 package appFx.datasource;
 
 import appFx.datasource.daos.UniversalDAO;
+import appFx.datasource.helpers.DatasourceMap;
 import appFx.datasource.helpers.EditingCell;
 import appFx.datasource.helpers.MapValueFactoryKeys;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.ObservableMap;
 import javafx.event.EventHandler;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.util.Callback;
 import org.skife.jdbi.v2.DBI;
-import org.skife.jdbi.v2.tweak.ConnectionFactory;
 
 import java.sql.DatabaseMetaData;
 import java.util.ArrayList;
@@ -21,16 +19,14 @@ import java.util.Map;
 
 public class TableViewDS {
 
-    List<TableColumn<ObservableMap<String, SimpleObjectProperty<Object>>, ?>> tableColumns;
-    private ConnectionFactory connectionFactory;
+    List<TableColumn<DatasourceMap, ?>> tableColumns;
     private DBI dbi;
-    private ObservableList<ObservableMap<String, SimpleObjectProperty<Object>>> queryResult;
+    private ObservableList<DatasourceMap> queryResult;
     private DatabaseMetaData databaseMetaData;
     private String tableName;
 
-    public TableViewDS(ConnectionFactory connectionFactory, String tableName, Boolean createColumns) {
-        this.connectionFactory = connectionFactory;
-        this.dbi = new DBI(this.connectionFactory);
+    public TableViewDS(String connectionUrl, String tableName, Boolean createColumns) {
+        this.dbi = new DBI(connectionUrl);
         this.tableName = tableName;
         select();
 
@@ -44,14 +40,14 @@ public class TableViewDS {
 
     public void select() {
         UniversalDAO dao = dbi.open(UniversalDAO.class);
-        List<ObservableMap<String, SimpleObjectProperty<Object>>> result = dao.sqlQuery(tableName);
+        List<DatasourceMap> result = dao.sqlQuery(tableName);
         dao.close();
         this.queryResult = FXCollections.observableList(result);
     }
 
-    private void createColumns(ObservableMap<String, SimpleObjectProperty<Object>> row) {
+    private void createColumns(DatasourceMap row) {
         if (this.tableColumns == null) {
-            this.tableColumns = new ArrayList<TableColumn<ObservableMap<String, SimpleObjectProperty<Object>>, ?>>();
+            this.tableColumns = new ArrayList<>();
         } else {
             this.tableColumns.clear();
         }
@@ -71,22 +67,22 @@ public class TableViewDS {
                 public void handle(TableColumn.CellEditEvent cellEditEvent) {
                     String key = ((MapValueFactoryKeys) cellEditEvent.getTableColumn().getCellValueFactory()).getKey().toString();
                     String value = cellEditEvent.getNewValue().toString();
-                    Integer id = Integer.valueOf(((ObservableMap<String, SimpleObjectProperty<Object>>) cellEditEvent.getRowValue()).get("id").getValue().toString());
+                    Integer id = Integer.valueOf(((DatasourceMap) cellEditEvent.getRowValue()).get("id").getValue().toString());
                     UniversalDAO dao = dbi.open(UniversalDAO.class);
                     dao.update(tableName, key, value, id);
                     dao.close();
                     int selectedRowIndex = cellEditEvent.getTablePosition().getRow();
-                    ((ObservableMap<String, SimpleObjectProperty<Object>>) cellEditEvent.getTableView().getItems().get(selectedRowIndex)).get(key).setValue(cellEditEvent.getNewValue());
+                    ((DatasourceMap) cellEditEvent.getTableView().getItems().get(selectedRowIndex)).get(key).setValue(cellEditEvent.getNewValue());
                 }
             });
         }
     }
 
-    public ObservableList<ObservableMap<String, SimpleObjectProperty<Object>>> getQueryResult() {
+    public ObservableList<DatasourceMap> getQueryResult() {
         return queryResult;
     }
 
-    public List<TableColumn<ObservableMap<String, SimpleObjectProperty<Object>>, ?>> getTableColumns() {
+    public List<TableColumn<DatasourceMap, ?>> getTableColumns() {
         return tableColumns;
     }
 

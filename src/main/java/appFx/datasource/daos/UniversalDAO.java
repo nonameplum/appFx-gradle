@@ -1,5 +1,6 @@
 package appFx.datasource.daos;
 
+import appFx.datasource.helpers.DatasourceMap;
 import appFx.datasource.mappers.MapMapper;
 import appFx.datasource.mappers.MetaDataMapper;
 import javafx.beans.property.SimpleObjectProperty;
@@ -19,7 +20,7 @@ import java.util.Map;
 public interface UniversalDAO {
     @SqlQuery("select * from <table> order by ID")
     @Mapper(MapMapper.class)
-    public List<ObservableMap<String, SimpleObjectProperty<Object>>> sqlQuery(@Define("table") String table);
+    public List<DatasourceMap> sqlQuery(@Define("table") String table);
 
     @SqlUpdate("update <table> set <property> = :value where id = :id")
     int update(@Define("table") String table, @Define("property") String property, @Bind("value") String value, @Bind("id") int id);

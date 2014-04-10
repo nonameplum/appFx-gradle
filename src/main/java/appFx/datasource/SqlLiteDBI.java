@@ -2,16 +2,10 @@ package appFx.datasource;
 
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Handle;
-import org.skife.jdbi.v2.tweak.ConnectionFactory;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 
 public class SqlLiteDBI {
 
-    private final DBI dbi;
-    private final ConnectionFactory connectionFactory;
+    private DBI dbi;
     private static String datasourceClassName = "org.sqlite.JDBC";
     private static String connectionUrl = "jdbc:sqlite:database.db";
 
@@ -23,9 +17,7 @@ public class SqlLiteDBI {
             e.printStackTrace();
         }
 
-        connectionFactory = () -> DriverManager.getConnection(connectionUrl);
-
-        dbi = new DBI(connectionFactory);
+        dbi = new DBI(connectionUrl);
         createTable();
     }
 
@@ -38,12 +30,14 @@ public class SqlLiteDBI {
             try {
                 h.execute("drop table something");
                 h.execute("drop table user");
-            } catch (Exception e2) {}
+            } catch (Exception e2) {
+            }
             h.execute("create table something (id int, name varchar(100))");
             h.execute("create table user (id int, name varchar(100))");
             createBootstrapData();
+        } finally {
+            h.close();
         }
-        h.close();
     }
 
     private void createBootstrapData() {
@@ -58,16 +52,8 @@ public class SqlLiteDBI {
         h.close();
     }
 
-    public Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(connectionUrl);
-    }
-
     public DBI getDbi() {
         return dbi;
-    }
-
-    public ConnectionFactory getConnectionFactory() {
-        return connectionFactory;
     }
 
     public static String getConnectionUrl() {

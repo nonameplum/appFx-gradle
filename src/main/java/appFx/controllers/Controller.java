@@ -3,6 +3,7 @@ package appFx.controllers;
 import appFx.datasource.TableViewDS;
 import appFx.datasource.SqlLiteDBI;
 import appFx.datasource.daos.UniversalDAO;
+import appFx.datasource.helpers.DatasourceMap;
 import javafx.application.Application;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableMap;
@@ -38,7 +39,7 @@ public class Controller {
     @FXML
     private TextField tfSelected;
     @FXML
-    private TableView<ObservableMap<String, SimpleObjectProperty<Object>>> tableView;
+    private TableView<DatasourceMap> tableView;
     //private TableView<Something> tableView;
     @FXML
     private Button btnEdit;
@@ -50,14 +51,21 @@ public class Controller {
     @PostConstruct
     public void init() {
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setEditable(false);
+        tableView.setEditable(true);
     }
 
     public void onLoadData() {
         SqlLiteDBI sqlLiteDBI = (SqlLiteDBI) context.getApplicationContext().getRegisteredObject("db");
 
-        tableViewDS = new TableViewDS(sqlLiteDBI.getConnectionFactory(), "something", null);
+        tableViewDS = new TableViewDS(sqlLiteDBI.getConnectionUrl(), "something", null);
         tableView.getColumns().clear();
+
+
+        tableView.getColumns().addAll(tableViewDS.getTableColumns());
+        tableView.setItems(tableViewDS.getQueryResult());
+    }
+
+    public void setPopOver() {
         popOver = new PopOver();
 
         tableView.setOnMouseClicked(new EventHandler<MouseEvent>() {
@@ -111,7 +119,7 @@ public class Controller {
 
                             int i;
                             for (i = 0; i < tableViewDS.getTableColumns().size(); i++) {
-                                TableColumn<ObservableMap<String, SimpleObjectProperty<Object>>, ?> tableColumn = tableViewDS.getTableColumns().get(i);
+                                TableColumn<DatasourceMap, ?> tableColumn = tableViewDS.getTableColumns().get(i);
 
                                 Label label = new Label(tableColumn.getText());
                                 grid.add(label, 0, i);
@@ -130,7 +138,7 @@ public class Controller {
                                 @Override
                                 public void handle(ActionEvent actionEvent) {
                                     for (int j = 0; j < tableViewDS.getTableColumns().size(); j++) {
-                                        TableColumn<ObservableMap<String, SimpleObjectProperty<Object>>, ?> tableColumn = tableViewDS.getTableColumns().get(j);
+                                        TableColumn<DatasourceMap, ?> tableColumn = tableViewDS.getTableColumns().get(j);
                                         for (Node node : grid.getChildren()) {
                                             if (node.getId() != null && node.getId().equals(tableColumn.getText().toLowerCase())) {
                                                 String key = tableColumn.getText().toLowerCase();
@@ -187,9 +195,6 @@ public class Controller {
         };
 
         tableViewDS.getColumnWithKey("name").setCellFactory(cellFactory);
-
-        tableView.getColumns().addAll(tableViewDS.getTableColumns());
-        tableView.setItems(tableViewDS.getQueryResult());
     }
 
     public void onEdit() {
@@ -207,7 +212,7 @@ public class Controller {
 
             int i;
             for (i = 0; i < tableViewDS.getTableColumns().size(); i++) {
-                TableColumn<ObservableMap<String, SimpleObjectProperty<Object>>, ?> tableColumn = tableViewDS.getTableColumns().get(i);
+                TableColumn<DatasourceMap, ?> tableColumn = tableViewDS.getTableColumns().get(i);
 
                 Label label = new Label(tableColumn.getText());
                 grid.add(label, 0, i);
@@ -226,7 +231,7 @@ public class Controller {
                 @Override
                 public void handle(ActionEvent actionEvent) {
                     for (int j = 0; j < tableViewDS.getTableColumns().size(); j++) {
-                        TableColumn<ObservableMap<String, SimpleObjectProperty<Object>>, ?> tableColumn = tableViewDS.getTableColumns().get(j);
+                        TableColumn<DatasourceMap, ?> tableColumn = tableViewDS.getTableColumns().get(j);
                         for (Node node : grid.getChildren()) {
                             if (node.getId() != null && node.getId().equals(tableColumn.getText().toLowerCase())) {
                                 String key = tableColumn.getText().toLowerCase();

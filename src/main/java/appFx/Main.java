@@ -1,20 +1,16 @@
 package appFx;
 
-import appFx.controllers.OrmLiteController;
+import appFx.controllers.*;
 import appFx.datasource.SqlLiteDBI;
-import appFx.eventbus.EventBusContext;
-import appFx.eventbus.events.SomethingEvent;
+import appFx.eventbus.events.*;
+import appFx.eventbus.events.SimpleActionEvent;
 import eu.hansolo.enzo.notification.Notification;
 import javafx.application.Application;
-import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import javafx.util.Duration;
-import org.controlsfx.control.Notifications;
 import org.datafx.controller.ViewFactory;
 import org.datafx.controller.context.ViewContext;
-import reactfx.EventSource;
 import reactfx.Subscription;
 
 public class Main extends Application {
@@ -41,18 +37,34 @@ public class Main extends Application {
         notifier = Notification.Notifier.INSTANCE;
         notifier.setParentStage(primaryStage);
 
-        EventSource<SomethingEvent> eventSource = EventBusContext.getInstance().getEventSource(SomethingEvent.class);
-        if (eventSource != null) {
-            subscribe = eventSource.subscribe(event -> {
-                Notifications notificationBuilder = Notifications.create()
-                        .title("Update")
-                        .text("ID: " + event.getValue().getId() + "\nNAME: " + event.getValue().getName())
-                        .hideAfter(Duration.seconds(5))
-                        .position(Pos.BOTTOM_RIGHT);
+        EventBusContext.INSTANCE.eventBus.addListener(SomethingModelActionEvent.class, new EventListener<SomethingModelActionEvent>() {
+            @Override
+            public void notify(SomethingModelActionEvent e) {
+                notifier.notifyError(Integer.toString(e.getModel().getId()), e.getModel().getName());
+            }
+        });
 
-                notificationBuilder.showInformation();
-            });
-        }
+        EventBusContext.INSTANCE.eventBus.addListener(SimpleActionEvent.class, new EventListener<SimpleActionEvent>() {
+            @Override
+            public void notify(SimpleActionEvent e) {
+                notifier.notifyWarning(e.getClass().getName(), e.getSomeText() + " SimpleActionEvent.class 1");
+            }
+        });
+
+        EventBusContext.INSTANCE.eventBus.addListener(appFx.controllers.SimpleActionEvent.class, new EventListener<appFx.controllers.SimpleActionEvent>() {
+            @Override
+            public void notify(appFx.controllers.SimpleActionEvent e) {
+                notifier.notifyInfo(e.getClass().getName(), e.getAnotherText() + " appFx.controllers.SimpleActionEvent.class");
+            }
+        });
+
+        EventBusContext.INSTANCE.eventBus.addListener(SimpleActionEvent.class, new EventListener<SimpleActionEvent>() {
+            @Override
+            public void notify(SimpleActionEvent e) {
+                notifier.notifySuccess(e.getClass().getName(), e.getSomeText() + " SimpleActionEvent.class 2");
+            }
+        });
+
     }
 
     @Override

@@ -12,9 +12,8 @@ import javafx.scene.input.KeyEvent;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-public class EditingCell extends TableCell<Map, Object> {
+public class EditingCell<S, T> extends TableCell<S, T> {
 
     private TextField textField;
 
@@ -27,16 +26,19 @@ public class EditingCell extends TableCell<Map, Object> {
         if (textField == null) {
             createTextField();
         }
-        //setPadding(new Insets(0));
         setGraphic(textField);
         setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
-        Platform.runLater(new Runnable() {
-            @Override
-            public void run() {
-                textField.requestFocus();
-                textField.selectAll();
-            }
-        });
+        textField.requestFocus();
+    }
+
+    @Override
+    public void commitEdit(T o) {
+        if (!isEditing()) {
+            return;
+        }
+        super.commitEdit(o);
+
+        Platform.runLater(() -> getTableView().requestFocus());
     }
 
     @Override
@@ -49,7 +51,7 @@ public class EditingCell extends TableCell<Map, Object> {
     }
 
     @Override
-    public void updateItem(Object item, boolean empty) {
+    public void updateItem(T item, boolean empty) {
         super.updateItem(item, empty);
 
         if (empty) {
@@ -72,6 +74,7 @@ public class EditingCell extends TableCell<Map, Object> {
 
     private void createTextField() {
         textField = new TextField(getString());
+        System.out.println("Text field created: " + getString());
         //textField.setMinWidth(this.getWidth() - this.getGraphicTextGap() * 2);
         textField.setPrefHeight(this.getHeight() - 2);
 
@@ -79,11 +82,11 @@ public class EditingCell extends TableCell<Map, Object> {
             @Override
             public void handle(KeyEvent keyEvent) {
                 if (keyEvent.getCode() == KeyCode.ENTER) {
-                    commitEdit(textField.getText());
+                    commitEdit((T) textField.getText());
                 } else if (keyEvent.getCode() == KeyCode.ESCAPE) {
                     cancelEdit();
                 } else if (keyEvent.getCode() == KeyCode.TAB) {
-                    commitEdit(textField.getText());
+                    commitEdit((T) textField.getText());
                     TableColumn nextColumn = getNextColumn(!keyEvent.isShiftDown());
                     if (nextColumn != null) {
                         getTableView().edit(getTableRow().getIndex(), nextColumn);
@@ -101,9 +104,9 @@ public class EditingCell extends TableCell<Map, Object> {
      * @param forward true gets the column to the right, false the column to the left of the current column
      * @return
      */
-    private TableColumn<Map, ?> getNextColumn(boolean forward) {
-        List<TableColumn<Map, ?>> columns = new ArrayList<>();
-        for (TableColumn<Map, ?> column : getTableView().getColumns()) {
+    private TableColumn<S, ?> getNextColumn(boolean forward) {
+        List<TableColumn<S, ?>> columns = new ArrayList<>();
+        for (TableColumn<S, ?> column : getTableView().getColumns()) {
             columns.addAll(getLeaves(column));
         }
         //There is no other column that supports editing.
@@ -126,8 +129,8 @@ public class EditingCell extends TableCell<Map, Object> {
         return columns.get(nextIndex);
     }
 
-    private List<TableColumn<Map, ?>> getLeaves(TableColumn<Map, ?> root) {
-        List<TableColumn<Map, ?>> columns = new ArrayList<>();
+    private List<TableColumn<S, ?>> getLeaves(TableColumn<S, ?> root) {
+        List<TableColumn<S, ?>> columns = new ArrayList<>();
         if (root.getColumns().isEmpty()) {
             //We only want the leaves that are editable.
             if (root.isEditable()) {
@@ -135,7 +138,7 @@ public class EditingCell extends TableCell<Map, Object> {
             }
             return columns;
         } else {
-            for (TableColumn<Map, ?> column : root.getColumns()) {
+            for (TableColumn<S, ?> column : root.getColumns()) {
                 columns.addAll(getLeaves(column));
             }
             return columns;
